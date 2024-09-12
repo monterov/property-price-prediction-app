@@ -1,4 +1,5 @@
 import os
+import gdown
 import lightgbm as lgb
 import streamlit as st
 import pandas as pd
@@ -8,8 +9,17 @@ from sklearn.preprocessing import StandardScaler
 # Cargar las columnas del entrenamiento
 columnas_entrenamiento = pd.read_csv('columnas_entrenamiento.csv').values.flatten()
 
-# Cargar el modelo LightGBM 
-local_filename = 'modelo_lightgbm.txt'  
+# URL de tu archivo en Google Drive
+file_url = "https://drive.google.com/uc?id=1BQAQosuYB6rR0jMIxowC61UwUm0DuZ3s"
+output_file = 'modelo_lightgbm.txt'
+
+# Descargar el archivo desde Google Drive
+gdown.download(file_url, output_file, quiet=False)
+
+# Definir la variable `local_filename`
+local_filename = 'modelo_lightgbm.txt'  # Aquí defines el nombre del archivo descargado
+
+# Cargar el modelo LightGBM descargado
 model = lgb.Booster(model_file=local_filename)
 
 # Instrucciones para los usuarios
@@ -65,7 +75,7 @@ datos_propiedad = pd.DataFrame({
 
 # Preprocesamiento para que coincidan las columnas
 def preprocesar_datos(datos_propiedad, columnas_entrenamiento):
-    # Obtener las variables categóricas y convertirlas en dummies
+    # Convertir las variables categóricas a dummies correctamente
     datos_propiedad_processed = pd.get_dummies(datos_propiedad, 
                                                columns=['host_is_superhost_clean', 'neighbourhood_cleansed', 'room_type_clean'], 
                                                drop_first=True)
@@ -78,8 +88,8 @@ def preprocesar_datos(datos_propiedad, columnas_entrenamiento):
     datos_propiedad_processed = datos_propiedad_processed.reindex(columns=columnas_entrenamiento, fill_value=0)
 
     # Verificar si la codificación dummy se ha aplicado correctamente
-    print("Datos preprocesados: ")
-    print(datos_propiedad_processed.head())  # Aquí se mostrará la tabla después de hacer la codificación
+    st.write("Datos preprocesados: ")
+    st.write(datos_propiedad_processed)  # Aquí se mostrará la tabla después de hacer la codificación
 
     return datos_propiedad_processed
 
