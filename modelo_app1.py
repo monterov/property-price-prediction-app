@@ -85,6 +85,9 @@ def preprocesar_datos(datos_propiedad, columnas_entrenamiento):
     # Reindexar para asegurar que las columnas coincidan con las del entrenamiento
     datos_propiedad_processed = datos_propiedad_processed.reindex(columns=columnas_entrenamiento, fill_value=0)
 
+    # Verificar los datos que se están pasando al modelo
+    st.write(datos_propiedad_processed)  # Esto imprimirá las características preprocesadas
+
     # Estandarización (usando un scaler si es necesario)
     scaler = StandardScaler()
     datos_propiedad_scaled = scaler.fit_transform(datos_propiedad_processed)
