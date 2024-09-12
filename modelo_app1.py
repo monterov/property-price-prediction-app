@@ -1,25 +1,13 @@
 import os
-import gdown
 import lightgbm as lgb
 import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
-# Cargar las columnas del entrenamiento
+# Cargar las columnas del entrenamiento, archivo y modelo
 columnas_entrenamiento = pd.read_csv('columnas_entrenamiento.csv').values.flatten()
-
-# URL de tu archivo en Google Drive
-file_url = "https://drive.google.com/uc?id=1BQAQosuYB6rR0jMIxowC61UwUm0DuZ3s"
-output_file = 'modelo_lightgbm.txt'
-
-# Descargar el archivo desde Google Drive
-gdown.download(file_url, output_file, quiet=False)
-
-# Definir la variable `local_filename`
-local_filename = 'modelo_lightgbm.txt'  # Aquí defines el nombre del archivo descargado
-
-# Cargar el modelo LightGBM descargado
+local_filename = 'modelo_lightgbm.txt'  # Aquí defines el nombre del archivo que ya tienes en el repositorio
 model = lgb.Booster(model_file=local_filename)
 
 # Instrucciones para los usuarios
@@ -81,14 +69,8 @@ def preprocesar_datos(datos_propiedad, columnas_entrenamiento):
 
     datos_propiedad_processed['accommodates_bathrooms'] = datos_propiedad_processed['accommodates_clean'] * datos_propiedad_processed['bathrooms_clean']
     datos_propiedad_processed['bedrooms_bathrooms'] = datos_propiedad_processed['bedrooms_clean'] * datos_propiedad_processed['bathrooms_clean']
-    
-    # Reindexar para asegurar que las columnas coincidan con las del entrenamiento
     datos_propiedad_processed = datos_propiedad_processed.reindex(columns=columnas_entrenamiento, fill_value=0)
 
-    # Verificar los datos que se están pasando al modelo
-    st.write(datos_propiedad_processed)  # Esto imprimirá las características preprocesadas
-
-    # Estandarización (usando un scaler si es necesario)
     scaler = StandardScaler()
     datos_propiedad_scaled = scaler.fit_transform(datos_propiedad_processed)
     
@@ -103,11 +85,3 @@ if st.button("Predecir Precio"):
     precio_predicho_log = model.predict(datos_propiedad_scaled)
     precio_predicho = np.expm1(precio_predicho_log)  # Revertir la transformación logarítmica
     st.write(f"El precio predicho de la propiedad es: {precio_predicho[0]:.2f} € por noche")
-
-
-
-
-
-
-
-
