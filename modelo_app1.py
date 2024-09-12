@@ -9,10 +9,14 @@ from sklearn.preprocessing import StandardScaler
 # Cargar las columnas del entrenamiento
 columnas_entrenamiento = pd.read_csv('columnas_entrenamiento.csv').values.flatten()
 
-# URL de tu archivo en Google Drive (asegúrate de que el archivo es accesible desde la app)
+# URL de tu archivo en Google Drive
 file_url = "https://drive.google.com/uc?id=1BQAQosuYB6rR0jMIxowC61UwUm0DuZ3s"
 output_file = 'modelo_lightgbm.txt'
+
+# Descargar el archivo desde Google Drive
 gdown.download(file_url, output_file, quiet=False)
+
+# Definir la variable `local_filename`
 local_filename = 'modelo_lightgbm.txt'  # Aquí defines el nombre del archivo descargado
 
 # Cargar el modelo LightGBM descargado
@@ -69,9 +73,6 @@ datos_propiedad = pd.DataFrame({
     'number_of_reviews_clean': [reviews]
 })
 
-# Mostrar los datos ingresados por el usuario para verificación
-st.write("Datos de la propiedad ingresados:", datos_propiedad)
-
 # Preprocesamiento para que coincidan las columnas
 def preprocesar_datos(datos_propiedad, columnas_entrenamiento):
     datos_propiedad_processed = pd.get_dummies(datos_propiedad, 
@@ -88,20 +89,20 @@ def preprocesar_datos(datos_propiedad, columnas_entrenamiento):
     scaler = StandardScaler()
     datos_propiedad_scaled = scaler.fit_transform(datos_propiedad_processed)
     
-    return datos_propiedad_processed, datos_propiedad_scaled
+    return datos_propiedad_scaled, datos_propiedad_processed
 
 # Botón para predecir
 if st.button("Predecir Precio"):
     # Preprocesar los datos para que coincidan con las columnas del entrenamiento
-    datos_propiedad_processed, datos_propiedad_scaled = preprocesar_datos(datos_propiedad, columnas_entrenamiento)
-
-    # Mostrar los datos preprocesados para verificación
-    st.write("Datos procesados (antes de escalar):", datos_propiedad_processed)
-    st.write("Datos escalados:", datos_propiedad_scaled)
+    datos_propiedad_scaled, datos_propiedad_processed = preprocesar_datos(datos_propiedad, columnas_entrenamiento)
+    
+    # Verificar los datos preprocesados y la predicción
+    st.write("Datos Preprocesados:")
+    st.write(datos_propiedad_processed)  # Esto imprimirá las características preprocesadas
     
     # Predecir el precio
     precio_predicho_log = model.predict(datos_propiedad_scaled)
-    st.write("Logaritmo del precio predicho:", precio_predicho_log)
+    st.write(f"Predicción Logarítmica: {precio_predicho_log}")  # Verifica la predicción en log
+
     precio_predicho = np.expm1(precio_predicho_log)  # Revertir la transformación logarítmica
     st.write(f"El precio predicho de la propiedad es: {precio_predicho[0]:.2f} € por noche")
-
