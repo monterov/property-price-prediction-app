@@ -12,11 +12,7 @@ columnas_entrenamiento = pd.read_csv('columnas_entrenamiento.csv').values.flatte
 # URL de tu archivo en Google Drive (asegúrate de que el archivo es accesible desde la app)
 file_url = "https://drive.google.com/uc?id=1BQAQosuYB6rR0jMIxowC61UwUm0DuZ3s"
 output_file = 'modelo_lightgbm.txt'
-
-# Descargar el archivo desde Google Drive
 gdown.download(file_url, output_file, quiet=False)
-
-# Definir la variable `local_filename`
 local_filename = 'modelo_lightgbm.txt'  # Aquí defines el nombre del archivo descargado
 
 # Cargar el modelo LightGBM descargado
