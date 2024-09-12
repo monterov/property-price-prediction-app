@@ -65,35 +65,34 @@ datos_propiedad = pd.DataFrame({
 
 # Preprocesamiento para que coincidan las columnas
 def preprocesar_datos(datos_propiedad, columnas_entrenamiento):
+    # Obtener las variables categóricas y convertirlas en dummies
     datos_propiedad_processed = pd.get_dummies(datos_propiedad, 
                                                columns=['host_is_superhost_clean', 'neighbourhood_cleansed', 'room_type_clean'], 
                                                drop_first=True)
 
+    # Crear nuevas variables
     datos_propiedad_processed['accommodates_bathrooms'] = datos_propiedad_processed['accommodates_clean'] * datos_propiedad_processed['bathrooms_clean']
     datos_propiedad_processed['bedrooms_bathrooms'] = datos_propiedad_processed['bedrooms_clean'] * datos_propiedad_processed['bathrooms_clean']
     
     # Reindexar para asegurar que las columnas coincidan con las del entrenamiento
     datos_propiedad_processed = datos_propiedad_processed.reindex(columns=columnas_entrenamiento, fill_value=0)
 
-    # Estandarización (usando un scaler si es necesario)
-    scaler = StandardScaler()
-    datos_propiedad_scaled = scaler.fit_transform(datos_propiedad_processed)
-    
-    return datos_propiedad_scaled, datos_propiedad_processed
+    # Verificar si la codificación dummy se ha aplicado correctamente
+    print("Datos preprocesados: ")
+    print(datos_propiedad_processed.head())  # Aquí se mostrará la tabla después de hacer la codificación
 
-# Verificar los datos que se están pasando al modelo
-st.write("Datos preprocesados para la predicción:")
+    return datos_propiedad_processed
 
 # Botón para predecir
 if st.button("Predecir Precio"):
     # Preprocesar los datos para que coincidan con las columnas del entrenamiento
-    datos_propiedad_scaled, datos_propiedad_processed = preprocesar_datos(datos_propiedad, columnas_entrenamiento)
+    datos_propiedad_processed = preprocesar_datos(datos_propiedad, columnas_entrenamiento)
     
-    # Mostrar los datos preprocesados para verificar
-    st.write(datos_propiedad_processed)  # Mostrar los datos preprocesados
-
     # Predecir el precio
-    precio_predicho_log = model.predict(datos_propiedad_scaled)
+    precio_predicho_log = model.predict(datos_propiedad_processed)
     precio_predicho = np.expm1(precio_predicho_log)  # Revertir la transformación logarítmica
+    
+    # Mostrar el precio predicho y los datos preprocesados para depuración
     st.write(f"El precio predicho de la propiedad es: {precio_predicho[0]:.2f} € por noche")
-
+    st.write("Datos preprocesados:")
+    st.write(datos_propiedad_processed)
