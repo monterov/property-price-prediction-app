@@ -1,5 +1,4 @@
 import os
-import gdown
 import lightgbm as lgb
 import streamlit as st
 import pandas as pd
@@ -9,17 +8,8 @@ from sklearn.preprocessing import StandardScaler
 # Cargar las columnas del entrenamiento
 columnas_entrenamiento = pd.read_csv('columnas_entrenamiento.csv').values.flatten()
 
-# URL de tu archivo en Google Drive
-file_url = "https://drive.google.com/uc?id=1BQAQosuYB6rR0jMIxowC61UwUm0DuZ3s"
-output_file = 'modelo_lightgbm.txt'
-
-# Descargar el archivo desde Google Drive
-gdown.download(file_url, output_file, quiet=False)
-
-# Definir la variable `local_filename`
-local_filename = 'modelo_lightgbm.txt'  # Aquí defines el nombre del archivo descargado
-
-# Cargar el modelo LightGBM descargado
+# Cargar el modelo LightGBM 
+local_filename = 'modelo_lightgbm.txt'  
 model = lgb.Booster(model_file=local_filename)
 
 # Instrucciones para los usuarios
@@ -91,18 +81,19 @@ def preprocesar_datos(datos_propiedad, columnas_entrenamiento):
     
     return datos_propiedad_scaled, datos_propiedad_processed
 
+# Verificar los datos que se están pasando al modelo
+st.write("Datos preprocesados para la predicción:")
+
 # Botón para predecir
 if st.button("Predecir Precio"):
     # Preprocesar los datos para que coincidan con las columnas del entrenamiento
     datos_propiedad_scaled, datos_propiedad_processed = preprocesar_datos(datos_propiedad, columnas_entrenamiento)
     
-    # Verificar los datos preprocesados y la predicción
-    st.write("Datos Preprocesados:")
-    st.write(datos_propiedad_processed)  # Esto imprimirá las características preprocesadas
-    
+    # Mostrar los datos preprocesados para verificar
+    st.write(datos_propiedad_processed)  # Mostrar los datos preprocesados
+
     # Predecir el precio
     precio_predicho_log = model.predict(datos_propiedad_scaled)
-    st.write(f"Predicción Logarítmica: {precio_predicho_log}")  # Verifica la predicción en log
-
     precio_predicho = np.expm1(precio_predicho_log)  # Revertir la transformación logarítmica
     st.write(f"El precio predicho de la propiedad es: {precio_predicho[0]:.2f} € por noche")
+
