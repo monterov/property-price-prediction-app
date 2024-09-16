@@ -1,26 +1,10 @@
-import os
-import gdown
-import lightgbm as lgb
 import streamlit as st
-import pandas as pd
+import joblib
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+import pandas as pd
 
-# Cargar las columnas del entrenamiento
-columnas_entrenamiento = pd.read_csv('columnas_entrenamiento.csv').values.flatten()
-
-# URL de tu archivo en Google Drive
-file_url = "https://drive.google.com/uc?id=1BQAQosuYB6rR0jMIxowC61UwUm0DuZ3s"
-output_file = 'modelo_lightgbm.txt'
-
-# Descargar el archivo desde Google Drive
-gdown.download(file_url, output_file, quiet=False)
-
-# Definir la variable `local_filename`
-local_filename = 'modelo_lightgbm.txt'  # Aquí defines el nombre del archivo descargado
-
-# Cargar el modelo LightGBM descargado
-model = lgb.Booster(model_file=local_filename)
+# Cargar el modelo entrenado desde el archivo .pkl
+model = joblib.load('lightgbm_model.pkl')
 
 # Instrucciones para los usuarios
 st.sidebar.title("Instrucciones")
@@ -29,80 +13,100 @@ st.sidebar.write("""
 2. Introduce los detalles de la propiedad en los campos correspondientes.
 3. Selecciona el barrio de la lista de barrios disponibles.
 4. Haz clic en el botón "Predecir Precio" para obtener el precio estimado por noche.
-5. Si estás considerado en la plataforma como "Superhost", pon "sí" en la casilla correspondiente.
-6. Los baños completos se computan como números enteros, mientras que los aseos se suman con 0,5.
+5. Los baños completos se computan como números enteros, mientras que los aseos se suman con 0,5.
 """)
 
-# Crear la interfaz en Streamlit
-st.title("Predicción de Precio de Propiedades en Londres")
+# Título de la aplicación
+st.title('Predicción del Precio de Alquiler en Londres')
 
-# Crear los inputs en la interfaz
-accommodates = st.number_input("Número de personas", min_value=1, max_value=16, value=2)
-bathrooms = st.number_input("Número de baños", min_value=1.0, max_value=10.0, step=0.5, value=1.0)
-bedrooms = st.number_input("Número de dormitorios", min_value=1, max_value=10, value=1)
-beds = st.number_input("Número de camas", min_value=1, max_value=10, value=1)
-superhost = st.selectbox("¿Es superhost?", options=["Sí", "No"])
+# Input del usuario para las características de la propiedad
+st.header('Introduce las características de tu propiedad')
 
-# Listado completo de barrios de Londres
-neighbourhood = st.selectbox("Barrio", options=[
-    "Hackney", "Camden", "Islington", "Westminster", "Kensington and Chelsea", 
-    "Lambeth", "Southwark", "Tower Hamlets", "Wandsworth", "Hammersmith and Fulham",
-    "Greenwich", "Lewisham", "Bromley", "Croydon", "Sutton", "Merton", 
-    "Richmond upon Thames", "Kingston upon Thames", "Haringey", "Barnet", 
-    "Enfield", "Harrow", "Brent", "Ealing", "Hounslow", "Redbridge", 
-    "Waltham Forest", "Havering", "Bexley", "Barking and Dagenham", "Newham"])
+# Coordenadas aproximadas (se pueden conectar con los barrios de Londres)
+latitude = st.number_input('Latitud', value=51.5074)
+longitude = st.number_input('Longitud', value=-0.1278)
 
-room_type = st.selectbox("Tipo de habitación", options=["Entire home/apt", "Private room", "Shared room"])
-min_nights = st.number_input("Estancia mínima", min_value=1, max_value=365, value=1)
-max_nights = st.number_input("Estancia máxima", min_value=1, max_value=365, value=365)
-availability_30 = st.number_input("Disponibilidad en 30 días", min_value=0, max_value=30, value=10)
-reviews = st.number_input("Número de reseñas", min_value=0, max_value=1000, value=10)
+# Selección de barrio
+neighbourhood = st.selectbox('Selecciona el Barrio', options=['Kensington', 'Chelsea', 'Westminster', 'Otros'])
 
-# Almacenar los datos en un DataFrame
-datos_propiedad = pd.DataFrame({
-    'accommodates_clean': [accommodates],
-    'bathrooms_clean': [bathrooms],
-    'bedrooms_clean': [bedrooms],
-    'beds_clean': [beds],
-    'host_is_superhost_clean': [superhost],
-    'neighbourhood_cleansed': [neighbourhood],
-    'room_type_clean': [room_type],
-    'minimum_nights_avg_ntm_clean': [min_nights],
-    'maximum_nights_avg_ntm_clean': [max_nights],
-    'availability_30_clean': [availability_30],
-    'number_of_reviews_clean': [reviews]
-})
+# Capacidad de alojamiento
+accommodates = st.slider('Capacidad de Alojamiento (número de huéspedes)', min_value=1, max_value=10, value=2)
 
-# Preprocesamiento para que coincidan las columnas
-def preprocesar_datos(datos_propiedad, columnas_entrenamiento):
-    # Convertir las variables categóricas a dummies correctamente
-    datos_propiedad_processed = pd.get_dummies(datos_propiedad, 
-                                               columns=['host_is_superhost_clean', 'neighbourhood_cleansed', 'room_type_clean'], 
-                                               drop_first=True)
+# Número de dormitorios
+bedrooms = st.slider('Número de Dormitorios', min_value=1, max_value=10, value=1)
 
-    # Crear nuevas variables
-    datos_propiedad_processed['accommodates_bathrooms'] = datos_propiedad_processed['accommodates_clean'] * datos_propiedad_processed['bathrooms_clean']
-    datos_propiedad_processed['bedrooms_bathrooms'] = datos_propiedad_processed['bedrooms_clean'] * datos_propiedad_processed['bathrooms_clean']
+# Número de baños
+bathrooms = st.slider('Número de Baños', min_value=1.0, max_value=10.0, step=0.5, value=1.0)
+
+# Número de camas
+beds = st.slider('Número de Camas', min_value=1, max_value=10, value=1)
+
+# Mínimo y máximo de noches de estancia
+min_nights = st.number_input('Mínimo de Noches', min_value=1, value=1)
+max_nights = st.number_input('Máximo de Noches', min_value=1, value=30)
+
+# Selección del tipo de habitación
+room_type = st.selectbox('Tipo de Habitación', options=['Entire home/apt', 'Private room', 'Shared room', 'Hotel room'])
+
+# Selección de amenidades (checkboxes)
+amenities = st.multiselect('Selecciona las amenidades disponibles', 
+    ['Aire Acondicionado', 'Anfitrión amigable', 'Café', 'Caja fuerte', 
+    'Casa de planta baja', 'Cocina', 'Conexión a internet', 'Cuna', 
+    'Extintores', 'Horno', 'Muebles de jardín', 'Nevera', 'Otros', 
+    'Patio', 'Pequeños electrodomésticos', 'Plancha', 'Secadora', 'Wifi'],
+    default=['Otros'])
+
+# Botón para predecir el precio
+if st.button('Predecir Precio'):
+    # Crear el dataframe con los inputs del usuario
+    user_input = pd.DataFrame({
+        'latitude_listings_clean': [latitude],
+        'longitude_listings_clean': [longitude],
+        'minimum_nights_avg_ntm_normalized': [min_nights],
+        'maximum_nights_avg_ntm_normalized': [max_nights],
+        'accommodates_normalized': [accommodates],
+        'bathrooms_normalized': [bathrooms],
+        'bedrooms_normalized': [bedrooms],
+        'beds_normalized': [beds],
+        'year': [2024],  # Asumimos que es el año actual
+        'month': [9],  # Asumimos el mes actual
+        'day': [15],  # Asumimos el día actual
+        'Aire Acondicionado': [1 if 'Aire Acondicionado' in amenities else 0],
+        'Anfitrión amigable': [1 if 'Anfitrión amigable' in amenities else 0],
+        'Café': [1 if 'Café' in amenities else 0],
+        'Caja fuerte': [1 if 'Caja fuerte' in amenities else 0],
+        'Casa de planta baja': [1 if 'Casa de planta baja' in amenities else 0],
+        'Cocina': [1 if 'Cocina' in amenities else 0],
+        'Conexión a internet': [1 if 'Conexión a internet' in amenities else 0],
+        'Cuna': [1 if 'Cuna' in amenities else 0],
+        'Extintores': [1 if 'Extintores' in amenities else 0],
+        'Horno': [1 if 'Horno' in amenities else 0],
+        'Muebles de jardín': [1 if 'Muebles de jardín' in amenities else 0],
+        'Nevera': [1 if 'Nevera' in amenities else 0],
+        'Otros': [1 if 'Otros' in amenities else 0],
+        'Patio': [1 if 'Patio' in amenities else 0],
+        'Pequeños electrodomésticos': [1 if 'Pequeños electrodomésticos' in amenities else 0],
+        'Plancha': [1 if 'Plancha' in amenities else 0],
+        'Secadora': [1 if 'Secadora' in amenities else 0],
+        'Wifi': [1 if 'Wifi' in amenities else 0]
+    })
+
+# Cargar el modelo
+def load_model():
+    model = joblib.load('lightgbm_model.pkl')
+    return model
+
+    # Predecir el precio con el modelo
+    predicted_price = model.predict(user_input)[0]
+
+    # Mostrar el resultado
+    st.success(f'El precio estimado por noche es: ${predicted_price:.2f}')
+
+    # Guardar la predicción en un archivo CSV
+    csv_data = user_input
+    csv_data['Predicted_Price'] = predicted_price
+    csv_data.to_csv('prediccion_precio.csv', index=False)
     
-    # Reindexar para asegurar que las columnas coincidan con las del entrenamiento
-    datos_propiedad_processed = datos_propiedad_processed.reindex(columns=columnas_entrenamiento, fill_value=0)
+    # Opción para que el usuario descargue el archivo CSV
+    st.download_button(label="Descargar Predicción", data=csv_data.to_csv(index=False), file_name="prediccion_precio.csv", mime='text/csv')
 
-    # Verificar si la codificación dummy se ha aplicado correctamente
-    st.write("Datos preprocesados: ")
-    st.write(datos_propiedad_processed)  # Aquí se mostrará la tabla después de hacer la codificación
-
-    return datos_propiedad_processed
-
-# Botón para predecir
-if st.button("Predecir Precio"):
-    # Preprocesar los datos para que coincidan con las columnas del entrenamiento
-    datos_propiedad_processed = preprocesar_datos(datos_propiedad, columnas_entrenamiento)
-    
-    # Predecir el precio
-    precio_predicho_log = model.predict(datos_propiedad_processed)
-    precio_predicho = np.expm1(precio_predicho_log)  # Revertir la transformación logarítmica
-    
-    # Mostrar el precio predicho y los datos preprocesados para depuración
-    st.write(f"El precio predicho de la propiedad es: {precio_predicho[0]:.2f} € por noche")
-    st.write("Datos preprocesados:")
-    st.write(datos_propiedad_processed)
