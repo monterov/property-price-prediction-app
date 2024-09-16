@@ -2,8 +2,7 @@ import joblib
 import requests
 import streamlit as st
 import numpy as np
-import pandas as pd 
-from lightgbm import LGBMRegressor
+import pandas as pd
 
 # URL cruda de GitHub al archivo del modelo (pkl)
 url = 'https://raw.githubusercontent.com/monterov/property-price-prediction-app/main/lightgbm_model.pkl'
@@ -32,14 +31,10 @@ try:
 except Exception as e:
     st.error(f"Error al cargar el modelo: {str(e)}")
 
-# Ejemplo de predicción (reemplazar input_data con los datos de entrada reales)
-try:
-    # Aquí deberías preparar los datos de entrada
-    input_data = [2, 1.5, 1, 1, 1, 1, 1, 51.5074, -0.1278, 1, 1]  # Reemplazar con los datos correctos
-    prediction = model.predict([input_data])
-    st.write(f"Predicción: {prediction}")
-except Exception as e:
-    st.error(f"Error al realizar la predicción: {str(e)}")
+# Verificar si el modelo se cargó correctamente
+if 'model' not in locals():
+    st.error("El modelo no se pudo cargar.")
+    st.stop()
 
 # Diccionario con los barrios de Londres y sus coordenadas (latitud y longitud)
 barrios = {
@@ -138,6 +133,10 @@ if st.button("Predecir Precio"):
         input_data[amenity] = amenities_data[i]
 
     # Hacer la predicción
-    prediction = model.predict(input_data)
-    st.write(f"El precio estimado por noche es: **${prediction[0] * 100:.2f}**")
+    try:
+        prediction = model.predict(input_data)
+        st.write(f"El precio estimado por noche es: **${prediction[0] * 100:.2f}**")
+    except Exception as e:
+        st.error(f"Error al realizar la predicción: {str(e)}")
+
 
