@@ -3,6 +3,7 @@ import requests
 import streamlit as st
 import numpy as np
 import pandas as pd
+from datetime import datetime 
 
 # URL cruda de GitHub al archivo del modelo (pkl)
 url = 'https://raw.githubusercontent.com/monterov/property-price-prediction-app/main/lightgbm_model.pkl'
