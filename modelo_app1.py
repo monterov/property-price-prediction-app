@@ -132,7 +132,7 @@ if st.button("Predecir Precio"):
         'accommodates_normalized': [accommodates / 16],
         'bathrooms_normalized': [bathrooms / 5],
         'bedrooms_normalized': [bedrooms / 10],
-        'beds_normalized': [beds / 10]
+        'beds_normalized': [beds / 10],
         'year': [year],
         'month': [month],
         'day': [day]
