@@ -1,27 +1,43 @@
 import joblib
 import requests
-import os
 import streamlit as st
-import numpy as np
-import pandas as pd
 
 # URL cruda de GitHub al archivo del modelo (pkl)
-url = "https://raw.githubusercontent.com/monterov/tproperty-price-prediction-app/main/models/lightgbm_model.pkl"
+url = "https://raw.githubusercontent.com/monterov/property-price-prediction-app/main/models/lightgbm_model.pkl"
 
 # Ruta local para guardar el modelo descargado
 model_path = "lightgbm_model.pkl"
 
-# Descargar el archivo del modelo desde GitHub si no existe
-if not os.path.exists(model_path):
-    st.write("Descargando el modelo desde GitHub...")
+# Descargar el archivo del modelo desde GitHub
+try:
+    st.write("Descargando el modelo...")
     response = requests.get(url)
+    response.raise_for_status()  # Verifica si la descarga tuvo éxito
+
+    # Guardar el archivo en la ruta local
     with open(model_path, 'wb') as f:
         f.write(response.content)
-    st.write("Modelo descargado con éxito.")
+    st.write("Modelo descargado y guardado exitosamente.")
 
-# Cargar el modelo con joblib
-model = joblib.load(model_path)
-st.write("Modelo cargado con éxito.")
+except requests.exceptions.RequestException as e:
+    st.error(f"Error al descargar el modelo: {str(e)}")
+
+# Cargar el modelo desde la ruta local
+try:
+    st.write("Cargando el modelo...")
+    model = joblib.load(model_path)
+    st.write("Modelo cargado exitosamente.")
+except Exception as e:
+    st.error(f"Error al cargar el modelo: {str(e)}")
+
+# Ejemplo de predicción (reemplazar input_data con los datos de entrada reales)
+try:
+    # Aquí deberías preparar los datos de entrada
+    input_data = [2, 1.5, 1, 1, 1, 1, 1, 51.5074, -0.1278, 1, 1]  # Reemplazar con los datos correctos
+    prediction = model.predict([input_data])
+    st.write(f"Predicción: {prediction}")
+except Exception as e:
+    st.error(f"Error al realizar la predicción: {str(e)}")
 
 # Diccionario con los barrios de Londres y sus coordenadas (latitud y longitud)
 barrios = {
