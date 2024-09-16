@@ -2,8 +2,9 @@ import joblib
 import requests
 import streamlit as st
 import numpy as np
-import pandas as pd
-from datetime import datetime 
+import pandas as pd 
+from lightgbm import LGBMRegressor
+from sklearn.preprocessing import MinMaxScaler
 
 # URL cruda de GitHub al archivo del modelo (pkl)
 url = 'https://raw.githubusercontent.com/monterov/property-price-prediction-app/main/lightgbm_model.pkl'
@@ -32,10 +33,12 @@ try:
 except Exception as e:
     st.error(f"Error al cargar el modelo: {str(e)}")
 
-# Verificar si el modelo se cargó correctamente
-if 'model' not in locals():
-    st.error("El modelo no se pudo cargar.")
-    st.stop()
+# Cargar el scaler que normalizó el precio (esto debe haber sido guardado en el entrenamiento)
+scaler = MinMaxScaler()
+
+# Cargar los precios originales usados en la normalización
+min_price = 0  # El valor mínimo de los precios en tu dataset original
+max_price = 1000  # El valor máximo de los precios en tu dataset original
 
 # Diccionario con los barrios de Londres y sus coordenadas (latitud y longitud)
 barrios = {
@@ -108,12 +111,6 @@ amenities = {
     'Wifi': st.checkbox('Wifi'),
 }
 
-# Obtener la fecha actual
-now = datetime.now()
-year = now.year
-month = now.month
-day = now.day
-
 # Convertir amenidades a formato binario para el modelo
 amenities_data = np.array([int(value) for value in amenities.values()])
 
@@ -132,10 +129,7 @@ if st.button("Predecir Precio"):
         'accommodates_normalized': [accommodates / 16],
         'bathrooms_normalized': [bathrooms / 5],
         'bedrooms_normalized': [bedrooms / 10],
-        'beds_normalized': [beds / 10],
-        'year': [year],
-        'month': [month],
-        'day': [day]
+        'beds_normalized': [beds / 10]
     })
 
     # Añadir las amenidades
@@ -143,10 +137,8 @@ if st.button("Predecir Precio"):
         input_data[amenity] = amenities_data[i]
 
     # Hacer la predicción
-    try:
-        prediction = model.predict(input_data)
-        st.write(f"El precio estimado por noche es: **${prediction[0] * 100:.2f}**")
-    except Exception as e:
-        st.error(f"Error al realizar la predicción: {str(e)}")
+    prediction_normalized = model.predict(input_data)
 
-
+    # Revertir la normalización para obtener el precio real
+    prediction_real = prediction_normalized * (max_price - min_price) + min_price
+    st.write(f"El precio estimado por noche es: **${prediction_real[0]:.2f}**")
