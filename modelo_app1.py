@@ -3,9 +3,8 @@ import requests
 import streamlit as st
 
 # URL cruda de GitHub al archivo del modelo (pkl)
-url = "https://raw.githubusercontent.com/monterov/property-price-prediction-app/main/models/lightgbm_model.pkl"
+url = 'https://raw.githubusercontent.com/monterov/property-price-prediction-app/main/lightgbm_model.pkl'
 
-# Ruta local para guardar el modelo descargado
 model_path = "lightgbm_model.pkl"
 
 # Descargar el archivo del modelo desde GitHub
