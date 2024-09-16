@@ -6,9 +6,9 @@ import pandas as pd
 from lightgbm import LGBMRegressor
 
 # URL cruda de GitHub al archivo del modelo (pkl)
-url = 'https://raw.githubusercontent.com/monterov/property-price-prediction-app/main/lightgbmmodel.pkl'
+url = 'https://raw.githubusercontent.com/monterov/property-price-prediction-app/main/lightgbm_model.pkl'
 
-model_path = "lightgbmmodel.pkl"
+model_path = "lightgbm_model.pkl"
 
 # Descargar el archivo del modelo desde GitHub
 try:
