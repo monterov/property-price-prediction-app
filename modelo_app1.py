@@ -34,13 +34,6 @@ try:
 except Exception as e:
     st.error(f"Error al cargar el modelo: {str(e)}")
 
-# Cargar el scaler que normalizó el precio (esto debe haber sido guardado en el entrenamiento)
-scaler = MinMaxScaler()
-
-# Cargar los precios originales usados en la normalización
-min_price = 0  # El valor mínimo de los precios en tu dataset original
-max_price = 1000  # El valor máximo de los precios en tu dataset original
-
 # Diccionario con los barrios de Londres y sus coordenadas (latitud y longitud)
 barrios = {
     'Camden': (51.541, -0.142),
@@ -150,6 +143,9 @@ if st.button("Predecir Precio"):
     # Hacer la predicción
     prediction_normalized = model.predict(input_data)
 
-    # Revertir la normalización para obtener el precio real
-    prediction_real = prediction_normalized * (max_price - min_price) + min_price
+    # Invertir la normalización manualmente
+    prediction_real = prediction_normalized * 100
+
     st.write(f"El precio estimado por noche es: **${prediction_real[0]:.2f}**")
+
+
