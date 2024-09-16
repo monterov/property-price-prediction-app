@@ -1,6 +1,8 @@
 import joblib
 import requests
 import streamlit as st
+import numpy as np
+import pandas as pd 
 
 # URL cruda de GitHub al archivo del modelo (pkl)
 url = 'https://raw.githubusercontent.com/monterov/property-price-prediction-app/main/lightgbmmodel.pkl'
