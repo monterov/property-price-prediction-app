@@ -107,6 +107,12 @@ amenities = {
     'Wifi': st.checkbox('Wifi'),
 }
 
+# Obtener la fecha actual
+now = datetime.now()
+year = now.year
+month = now.month
+day = now.day
+
 # Convertir amenidades a formato binario para el modelo
 amenities_data = np.array([int(value) for value in amenities.values()])
 
