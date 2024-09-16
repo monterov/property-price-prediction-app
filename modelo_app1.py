@@ -144,7 +144,7 @@ if st.button("Predecir Precio"):
     prediction_normalized = model.predict(input_data)
 
     # Invertir la normalización manualmente
-    prediction_real = prediction_normalized * 100
+    prediction_real = prediction_normalized * 1000
 
     st.write(f"El precio estimado por noche es: **${prediction_real[0]:.2f}**")
 
